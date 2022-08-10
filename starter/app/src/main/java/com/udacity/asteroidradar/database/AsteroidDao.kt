@@ -8,8 +8,8 @@ import com.udacity.asteroidradar.Constants
 interface AsteroidDao {
 
     @Query("SELECT * from ${Constants.ASTEROID_TABLE_NAME}")
-    fun getAsteroids () : LiveData<List<AsteroidEntity>>
+    fun getAsteroids () : LiveData<List<DatabaseAsteroid>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertAsteroids (vararg asteroids: AsteroidEntity)
+    fun insertAsteroids (vararg asteroids: DatabaseAsteroid)
 }
