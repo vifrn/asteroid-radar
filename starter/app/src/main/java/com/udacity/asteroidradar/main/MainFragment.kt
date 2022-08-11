@@ -26,7 +26,7 @@ class MainFragment : Fragment() {
 
         setHasOptionsMenu(true)
 
-        viewModel.response.observe(viewLifecycleOwner, Observer{
+        viewModel.asteroids.observe(viewLifecycleOwner, Observer{
             it?.let {
                 adapter.submitList(it)
             }

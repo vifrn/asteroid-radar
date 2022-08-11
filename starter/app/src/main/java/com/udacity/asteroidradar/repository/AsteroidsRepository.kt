@@ -1,19 +1,33 @@
 package com.udacity.asteroidradar.repository
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import com.udacity.asteroidradar.Asteroid
+import androidx.lifecycle.Transformations
+import com.udacity.asteroidradar.api.getNextSevenDaysFormattedDates
+import com.udacity.asteroidradar.api.parseAsteroidsJsonResult
 import com.udacity.asteroidradar.database.AsteroidDatabase
+import com.udacity.asteroidradar.network.AsteroidsApi
+import com.udacity.asteroidradar.network.asDatabaseModel
+import com.udacity.asteroidradar.network.asDomainModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
+import retrofit2.await
 
 class AsteroidsRepository (private val database: AsteroidDatabase) {
 
-    private val _asteroids = MutableLiveData<List<Asteroid>>()
+    val asteroids = Transformations.map(database.asteroidDao.getAsteroids()) {
+        it.asDomainModel()
+    }
 
-    val asteroids : LiveData<List<Asteroid>>
-        get() = _asteroids
-
-    fun refreshAsteroids () {
-        //TODO: Query NW to get new Asteroids data and updateDB
+    suspend fun refreshAsteroids () {
+        withContext(Dispatchers.IO) {
+            val nextDays = getNextSevenDaysFormattedDates()
+            val asteroids = parseAsteroidsJsonResult(
+                JSONObject(
+                    AsteroidsApi.retroFitService.getAsteroids(nextDays.first(), nextDays.last()).await()
+                )
+            )
+            database.asteroidDao.insertAsteroids(*asteroids.asDatabaseModel())
+        }
     }
 
 
