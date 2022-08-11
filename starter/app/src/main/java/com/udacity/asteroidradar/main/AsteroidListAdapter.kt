@@ -8,23 +8,23 @@ import androidx.recyclerview.widget.RecyclerView
 import com.udacity.asteroidradar.Asteroid
 import com.udacity.asteroidradar.databinding.AsteroidListItemBinding
 
-class AsteroidListAdapter: ListAdapter<Asteroid, AsteroidListAdapter.ViewHolder>(AsteroidDiffCallback())  {
+class AsteroidListAdapter (val clickListener: AsteroidClickListener) : ListAdapter<Asteroid, AsteroidListAdapter.ViewHolder>(AsteroidDiffCallback())  {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder.from(parent)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        holder.bind(clickListener, getItem(position))
+
     }
 
     class ViewHolder(val binding: AsteroidListItemBinding): RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(item : Asteroid) {
+        fun bind(clickListener: AsteroidClickListener, item : Asteroid) {
             binding.asteroid = item
-            binding.listAsteroidName.text = item.codename
-            binding.listCloseApproachDate.text = item.closeApproachDate
-
+            binding.clickListener = clickListener
+            binding.executePendingBindings()
         }
 
         companion object {
@@ -35,15 +35,18 @@ class AsteroidListAdapter: ListAdapter<Asteroid, AsteroidListAdapter.ViewHolder>
             }
         }
     }
+}
 
-    class AsteroidDiffCallback : DiffUtil.ItemCallback<Asteroid>() {
-        override fun areItemsTheSame(oldItem: Asteroid, newItem: Asteroid): Boolean {
-            return oldItem == newItem
-        }
+class AsteroidDiffCallback : DiffUtil.ItemCallback<Asteroid>() {
+    override fun areItemsTheSame(oldItem: Asteroid, newItem: Asteroid): Boolean {
+        return oldItem == newItem
+    }
 
-        override fun areContentsTheSame(oldItem: Asteroid, newItem: Asteroid): Boolean {
-            return oldItem.id == newItem.id
-        }
+    override fun areContentsTheSame(oldItem: Asteroid, newItem: Asteroid): Boolean {
+        return oldItem.id == newItem.id
+    }
+}
 
-
-    }}
+class AsteroidClickListener(val clickListener : (asteroid: Asteroid) -> Unit) {
+    fun onClick(asteroid : Asteroid) = clickListener(asteroid)
+}
