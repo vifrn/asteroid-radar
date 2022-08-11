@@ -28,8 +28,7 @@ class MainFragment : Fragment() {
 
         viewModel.response.observe(viewLifecycleOwner, Observer{
             it?.let {
-                adapter.data = it
-                adapter.notifyDataSetChanged()
+                adapter.submitList(it)
             }
         })
         return binding.root
