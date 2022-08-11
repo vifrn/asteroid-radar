@@ -1,5 +1,6 @@
 package com.udacity.asteroidradar.repository
 
+import android.util.Log
 import androidx.lifecycle.Transformations
 import com.udacity.asteroidradar.api.getNextSevenDaysFormattedDates
 import com.udacity.asteroidradar.api.parseAsteroidsJsonResult
@@ -20,13 +21,17 @@ class AsteroidsRepository (private val database: AsteroidDatabase) {
 
     suspend fun refreshAsteroids () {
         withContext(Dispatchers.IO) {
-            val nextDays = getNextSevenDaysFormattedDates()
-            val asteroids = parseAsteroidsJsonResult(
-                JSONObject(
-                    AsteroidsApi.retroFitService.getAsteroids(nextDays.first(), nextDays.last()).await()
+            try{
+                val nextDays = getNextSevenDaysFormattedDates()
+                val asteroids = parseAsteroidsJsonResult(
+                    JSONObject(
+                        AsteroidsApi.retroFitService.getAsteroids(nextDays.first(), nextDays.last()).await()
+                    )
                 )
-            )
-            database.asteroidDao.insertAsteroids(*asteroids.asDatabaseModel())
+                database.asteroidDao.insertAsteroids(*asteroids.asDatabaseModel())
+            } catch (e : Exception) {
+                Log.d("Test", "Something went wrong: " + e.message)
+            }
         }
     }
 
