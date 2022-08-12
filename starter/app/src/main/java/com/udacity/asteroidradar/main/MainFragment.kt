@@ -38,6 +38,8 @@ class MainFragment : Fragment() {
         viewModel.imageOfTheDay.observe(viewLifecycleOwner) {
             it?.let {
                 Picasso.with(requireContext()).load(it.url).into(binding.activityMainImageOfTheDay)
+                binding.activityMainImageOfTheDay.contentDescription =
+                    getString(R.string.nasa_picture_of_day_content_description_format, it.title)
             }
         }
 
