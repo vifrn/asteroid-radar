@@ -3,6 +3,7 @@ package com.udacity.asteroidradar.repository
 import android.util.Log
 import androidx.lifecycle.Transformations
 import com.udacity.asteroidradar.api.getNextSevenDaysFormattedDates
+import com.udacity.asteroidradar.api.getTodayFormattedDate
 import com.udacity.asteroidradar.api.parseAsteroidsJsonResult
 import com.udacity.asteroidradar.database.asteroid.AsteroidDatabase
 import com.udacity.asteroidradar.database.iodt.PictureOfDayDatabase
@@ -16,7 +17,7 @@ import retrofit2.await
 
 class AsteroidsRepository (private val asteroidDatabase: AsteroidDatabase, private val pictureDatabase : PictureOfDayDatabase) {
 
-    val asteroids = Transformations.map(asteroidDatabase.asteroidDao.getAsteroids()) {
+    val asteroids = Transformations.map(asteroidDatabase.asteroidDao.getAsteroids(getTodayFormattedDate())) {
         it.asDomainModel()
     }
 
