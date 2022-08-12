@@ -4,7 +4,8 @@ import android.util.Log
 import androidx.lifecycle.Transformations
 import com.udacity.asteroidradar.api.getNextSevenDaysFormattedDates
 import com.udacity.asteroidradar.api.parseAsteroidsJsonResult
-import com.udacity.asteroidradar.database.AsteroidDatabase
+import com.udacity.asteroidradar.database.asteroid.AsteroidDatabase
+import com.udacity.asteroidradar.database.iodt.PictureOfDayDatabase
 import com.udacity.asteroidradar.network.AsteroidsApi
 import com.udacity.asteroidradar.network.asDatabaseModel
 import com.udacity.asteroidradar.network.asDomainModel
@@ -13,10 +14,14 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import retrofit2.await
 
-class AsteroidsRepository (private val database: AsteroidDatabase) {
+class AsteroidsRepository (private val asteroidDatabase: AsteroidDatabase, private val pictureDatabase : PictureOfDayDatabase) {
 
-    val asteroids = Transformations.map(database.asteroidDao.getAsteroids()) {
+    val asteroids = Transformations.map(asteroidDatabase.asteroidDao.getAsteroids()) {
         it.asDomainModel()
+    }
+
+    val imageOfTheDay = Transformations.map(pictureDatabase.pictureDao.getPictureOfDay()) {
+        it?.asDomainModel()
     }
 
     suspend fun refreshAsteroids () {
@@ -25,15 +30,31 @@ class AsteroidsRepository (private val database: AsteroidDatabase) {
                 val nextDays = getNextSevenDaysFormattedDates()
                 val asteroids = parseAsteroidsJsonResult(
                     JSONObject(
-                        AsteroidsApi.retroFitService.getAsteroids(nextDays.first(), nextDays.last()).await()
+                        AsteroidsApi.asteroidService.getAsteroids(nextDays.first(), nextDays.last()).await()
                     )
                 )
-                database.asteroidDao.insertAsteroids(*asteroids.asDatabaseModel())
+                asteroidDatabase.asteroidDao.insertAsteroids(*asteroids.asDatabaseModel())
             } catch (e : Exception) {
-                Log.d("Test", "Something went wrong: " + e.message)
+                Log.e("Failure", "Something went wrong: " + e.message)
             }
         }
     }
 
+    suspend fun refreshImageOfTheDay () {
+        withContext(Dispatchers.IO) {
+            try{
+                fetchAndMaybeSavePicture()
+            } catch (e : Exception) {
+                Log.e("Failure", "Something went wrong: " + e.message)
+            }
+        }
+    }
+
+    private suspend fun fetchAndMaybeSavePicture() {
+        val picture = AsteroidsApi.pictureService.getImageOfTheDay().await()
+        if (picture.mediaType == "image"){
+            pictureDatabase.pictureDao.insertPictureOfDay(picture.asDatabaseModel())
+        }
+    }
 
 }

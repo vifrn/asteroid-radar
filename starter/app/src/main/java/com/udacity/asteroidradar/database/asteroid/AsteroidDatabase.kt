@@ -1,4 +1,4 @@
-package com.udacity.asteroidradar.database
+package com.udacity.asteroidradar.database.asteroid
 
 import android.content.Context
 import androidx.room.Database
@@ -12,7 +12,7 @@ abstract class AsteroidDatabase : RoomDatabase() {
 
 private lateinit var INSTANCE: AsteroidDatabase
 
-fun getDatabase(context: Context): AsteroidDatabase {
+fun getAsteroidDatabase(context: Context): AsteroidDatabase {
     synchronized(AsteroidDatabase::class.java){
         if (!::INSTANCE.isInitialized) {
             INSTANCE = Room.databaseBuilder(context.applicationContext,
