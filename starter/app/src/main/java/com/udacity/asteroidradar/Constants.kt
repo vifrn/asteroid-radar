@@ -8,7 +8,6 @@ object Constants {
     //API Constants
     const val ASTEROIDS_ENDPOINT = "neo/rest/v1/feed"
     const val IOTD_ENDPOINT = "planetary/apod"
-    const val API_KEY = ""
 
     //Database Constants
     const val ASTEROID_TABLE_NAME = "asteroids_table"
