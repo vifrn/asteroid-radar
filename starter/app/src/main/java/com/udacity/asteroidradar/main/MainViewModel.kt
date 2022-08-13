@@ -1,14 +1,14 @@
 package com.udacity.asteroidradar.main
 
 import android.app.Application
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.udacity.asteroidradar.Asteroid
+import com.udacity.asteroidradar.api.getTodayFormattedDate
 
 import com.udacity.asteroidradar.database.asteroid.getAsteroidDatabase
 import com.udacity.asteroidradar.database.iodt.getPictureDatabase
+import com.udacity.asteroidradar.network.asDomainModel
+import com.udacity.asteroidradar.repository.AsteroidFilter
 import com.udacity.asteroidradar.repository.AsteroidsRepository
 import kotlinx.coroutines.launch
 
@@ -18,7 +18,26 @@ class MainViewModel (application: Application) : AndroidViewModel(application) {
     private val pictureDatabase = getPictureDatabase(getApplication<Application>().applicationContext)
     private val repository = AsteroidsRepository(asteroidDatabase, pictureDatabase)
 
-    val asteroids = repository.asteroids
+    private val _filter = MutableLiveData<AsteroidFilter>(AsteroidFilter.ALL)
+
+    val asteroids = Transformations.switchMap(_filter) { filter ->
+        when(filter) {
+            AsteroidFilter.WEEK -> {
+                asteroidDatabase.asteroidDao.getWeekAsteroids(getTodayFormattedDate()).map {
+                    it.asDomainModel()
+                }
+            }
+            AsteroidFilter.TODAY -> {
+                asteroidDatabase.asteroidDao.getTodayAsteroids(getTodayFormattedDate()).map {
+                    it.asDomainModel() }
+            }
+            AsteroidFilter.ALL -> {
+                asteroidDatabase.asteroidDao.getAsteroids().map {
+                    it.asDomainModel()
+                }
+            }
+        }
+    }
     val imageOfTheDay = repository.imageOfTheDay
 
     private val _navigateToAsteroidDetails = MutableLiveData<Asteroid>()
@@ -39,6 +58,10 @@ class MainViewModel (application: Application) : AndroidViewModel(application) {
 
     fun navigationToAsteroidDetailsDone() {
         _navigateToAsteroidDetails.value = null
+    }
+
+    fun updateFilter (filter : AsteroidFilter) {
+        _filter.value = filter
     }
 
 }
